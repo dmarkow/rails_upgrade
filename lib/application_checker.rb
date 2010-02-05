@@ -15,7 +15,12 @@ module Rails
       
       # Run all the check methods
       def run
-        the_methods = (self.public_methods - Object.methods) - ["run", "initialize"]
+        the_methods = (self.public_methods - Object.methods)
+        
+        # Ruby 1.9 public_methods/methods return symbols, not strings. Convert them back to strings
+        the_methods = the_methods.collect {|m| m.to_s }
+        
+        the_methods -= ["run", "initialize"]
         
         the_methods.each {|m| send m }
       end
@@ -284,6 +289,10 @@ module Rails
       
       # Show an upgrade alert to the user
       def alert(title, text, more_info_url, culprits)
+        # Ruby 1.9 doesn't allow 'each' to be called on a single string, 
+        # so make sure culprits is a string
+        culprits = [culprits] if !culprits.respond_to?(:each)
+        
         if Config::CONFIG['host_os'].downcase =~ /mswin|windows|mingw/
           basic_alert(title, text, more_info_url, culprits)
         else
